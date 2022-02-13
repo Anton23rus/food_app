@@ -3,8 +3,6 @@ package com.example.food_rest.controller;
 import com.example.food_rest.dto.FoodDTO;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("api")
 public class FoodController {
