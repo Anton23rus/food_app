@@ -1,18 +1,22 @@
 package com.example.food_rest.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.food_rest.dto.FoodDTO;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("api")
 public class FoodController {
 
-    public String createFood() {
+    @PostMapping("foods")
+    public FoodDTO createFood(@RequestBody FoodDTO foodDTO) {
         //http://localhost:8080/api/foods
-        return null;
+
+        return foodDTO;
     }
 
-    @RequestMapping("test")
+    @GetMapping("test")
     public String test () {
         return "it works!";
     }
