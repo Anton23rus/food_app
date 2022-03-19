@@ -33,8 +33,8 @@ public class CsvWorkerUtil {
         }
     }
 
-    public void writeToCsv(final String filePath, List<String> data) {
-        try (CsvFileWriter bufferedWriter = new CsvFileWriter(new FileWriter(filePath, true))) {
+    public void writeToCsv(final String filePath, List<String> data, boolean append) {
+        try (CsvFileWriter bufferedWriter = new CsvFileWriter(new FileWriter(filePath, append))) {
             data.stream()
                     .forEach(row -> {
                         bufferedWriter.write(row);
