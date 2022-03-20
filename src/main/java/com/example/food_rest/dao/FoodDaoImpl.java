@@ -2,55 +2,64 @@ package com.example.food_rest.dao;
 
 import com.example.food_rest.entity.FoodEntity;
 import com.example.food_rest.utils.CsvWorkerUtil;
-import com.example.food_rest.utils.FoodConverterUtil;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
 public class FoodDaoImpl implements FoodDao {
-    final private static String RESOURCE_FILE = "/Users/antonbook/Java/food_rest/src/main/resources/data/Food.csv";
-    final private static Character CSV_DELIMETR = ',';
+    final private String RESOURCE_FILE = "/Users/Miaton/Documents/Project/FoodApp/src/main/resources/data/Food.csv";
+//    final private String RESOURCE_FILE = "/Users/antonbook/Java/food_rest/src/main/resources/data/Food.csv";
+    final private Character CSV_DELIMITER = ',';
+    private Long currentFoodId;
 
-    private static FoodEntity deserializationFoodEntity(String textFoodEntity) {
-        Long foodId = Long.valueOf(textFoodEntity.substring(0, textFoodEntity.indexOf(CSV_DELIMETR)));
-        String foodName = textFoodEntity.substring(textFoodEntity.indexOf(CSV_DELIMETR) + 1);
+    {
+        List<FoodEntity> foodList = this.getFoodEntitiesFromCsv();
+        if (foodList.size() != 0) {
+            this.currentFoodId = foodList.get(foodList.size() - 1).getId();
+        } else {
+            this.currentFoodId = 1L;
+        }
+    }
+
+    private FoodEntity deserializationFoodEntity(String textFoodEntity) {
+        Long foodId = Long.valueOf(textFoodEntity.substring(0, textFoodEntity.indexOf(this.CSV_DELIMITER)));
+        String foodName = textFoodEntity.substring(textFoodEntity.indexOf(CSV_DELIMITER) + 1);
         return FoodEntity.builder()
                 .id(foodId)
                 .name(foodName)
                 .build();
     }
 
-    private static List<FoodEntity> getFoodEntitiesFromCsv() {
+    private List<FoodEntity> getFoodEntitiesFromCsv() {
         return CsvWorkerUtil.readCSVFile(RESOURCE_FILE, true).stream()
-                .map(FoodDaoImpl::deserializationFoodEntity)
+                .map(e -> this.deserializationFoodEntity(e))
                 .collect(Collectors.toList());
     }
 
-    private static String serializationFoodEntity(FoodEntity foodEntity) {
-        return String.format("%d%c%s", foodEntity.getId(), CSV_DELIMETR, foodEntity.getName());
+    private String serializationFoodEntity(FoodEntity foodEntity) {
+        return String.format("%d%c%s", foodEntity.getId(), CSV_DELIMITER, foodEntity.getName());
     }
 
-    private static void saveFoodEntitiesToCsv(List<FoodEntity> foodEntities) {
+    private void saveFoodEntitiesToCsv(List<FoodEntity> foodEntities) {
         List<String> textFoodEntities = foodEntities.stream()
                 .map(e -> serializationFoodEntity(e))
                 .collect(Collectors.toList());
         CsvWorkerUtil.writeToCsv(RESOURCE_FILE, textFoodEntities, false);
     }
 
-    private static void appendFoodEntityToCsv(FoodEntity foodEntity) {
+    private void appendFoodEntityToCsv(FoodEntity foodEntity) {
         CsvWorkerUtil.writeToCsv(RESOURCE_FILE, Collections.singletonList(serializationFoodEntity(foodEntity)),
                 true);
     }
 
     @Override
     public void create(FoodEntity foodEntity) {
-        boolean isExist = getFoodEntitiesFromCsv().stream()
-                .anyMatch(e -> e.getId().equals(foodEntity.getId()));
+        boolean isExist = foodEntity.getId() != 0 || foodEntity.getId() <= currentFoodId;
         if (!isExist) {
+            foodEntity.setId(currentFoodId++);
             appendFoodEntityToCsv(foodEntity);
         } else {
             throw new RuntimeException(String.format("FoodEntity with id %d is already exists", foodEntity.getId()));
@@ -104,7 +113,7 @@ public class FoodDaoImpl implements FoodDao {
         return getFoodEntitiesFromCsv();
     }
 
-    public static void main(String[] args) {
+    public void main(String[] args) {
         FoodDaoImpl foodDaoImpl = new FoodDaoImpl();
         foodDaoImpl.deleteByName("orange");
 //        System.out.println(foodDaoImpl.findAll());
