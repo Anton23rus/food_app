@@ -1,17 +1,22 @@
 package com.example.food_rest.dao;
 
 import com.example.food_rest.entity.FoodEntity;
+import com.example.food_rest.exceptions.DataBaseNotAvailableException;
 import com.example.food_rest.utils.CsvWorkerUtil;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
+@Slf4j
 public class FoodDaoImpl implements FoodDao {
-    final private String RESOURCE_FILE = "/Users/Miaton/Documents/Project/FoodApp/src/main/resources/data/Food.csv";
-//    final private String RESOURCE_FILE = "/Users/antonbook/Java/food_rest/src/main/resources/data/Food.csv";
+    //  final private String RESOURCE_FILE = "/Users/Miaton/Documents/Project/FoodApp/src/main/resources/data/Food.csv";
+    final private String RESOURCE_FILE = "/Users/antonbook/Java/food_rest/src/main/resources/data/Food.csv";
     final private Character CSV_DELIMITER = ',';
     private Long currentFoodId;
 
@@ -47,34 +52,52 @@ public class FoodDaoImpl implements FoodDao {
         List<String> textFoodEntities = foodEntities.stream()
                 .map(e -> serializationFoodEntity(e))
                 .collect(Collectors.toList());
-        CsvWorkerUtil.writeToCsv(RESOURCE_FILE, textFoodEntities, false);
+
+        try {
+            CsvWorkerUtil.writeToCsv(RESOURCE_FILE, textFoodEntities, false);
+        } catch (IOException e) {
+            throw new DataBaseNotAvailableException(RESOURCE_FILE);
+        }
     }
 
     private void appendFoodEntityToCsv(FoodEntity foodEntity) {
-        CsvWorkerUtil.writeToCsv(RESOURCE_FILE, Collections.singletonList(serializationFoodEntity(foodEntity)),
-                true);
+        try {
+            CsvWorkerUtil.writeToCsv(RESOURCE_FILE, Collections.singletonList(serializationFoodEntity(foodEntity)),
+                    true);
+        } catch (IOException e) {
+            throw new DataBaseNotAvailableException(RESOURCE_FILE);
+        }
     }
 
     @Override
     public void create(FoodEntity foodEntity) {
-        boolean isExist = foodEntity.getId() != 0 || foodEntity.getId() <= currentFoodId;
+        boolean isExist = foodEntity.getId() != 0 && foodEntity.getId() <= currentFoodId;
         if (!isExist) {
-            foodEntity.setId(currentFoodId++);
-            appendFoodEntityToCsv(foodEntity);
+            foodEntity.setId(++currentFoodId);
+                appendFoodEntityToCsv(foodEntity);
         } else {
-            throw new RuntimeException(String.format("FoodEntity with id %d is already exists", foodEntity.getId()));
+            throw new RuntimeException(String.format("FoodDao create operation: ERROR" +
+                    "FoodEntity with id %d is already exists", foodEntity.getId()));
         }
     }
 
     @Override
     public void update(FoodEntity foodEntity) {
-        List<FoodEntity> foodEntities = getFoodEntitiesFromCsv().stream()
+        List<FoodEntity> foodEntities = getFoodEntitiesFromCsv();
+        boolean hasFoodEntityInCsv = foodEntities.stream()
+                .anyMatch(e -> e.getId().equals(foodEntity.getId()));
+        if (!hasFoodEntityInCsv) {
+            throw new RuntimeException(String.format("FoodDao update operation: " +
+                    "ERROR FoodEntity with id %d is not exists", foodEntity.getId()));
+        }
+        List<FoodEntity> updatedFoodEntities = getFoodEntitiesFromCsv().stream()
                 .peek(e -> {
-                    if(e.getId().equals(foodEntity.getId())) {
+                    if (e.getId().equals(foodEntity.getId())) {
                         e.setName(foodEntity.getName());
-                    }})
+                    }
+                })
                 .collect(Collectors.toList());
-        saveFoodEntitiesToCsv(foodEntities);
+            saveFoodEntitiesToCsv(updatedFoodEntities);
     }
 
     @Override
@@ -83,6 +106,11 @@ public class FoodDaoImpl implements FoodDao {
                 .filter(e -> !e.getId().equals(id))
                 .collect(Collectors.toList());
         saveFoodEntitiesToCsv(foodEntities);
+    }
+
+    @Override
+    public void deleteAll() {
+        saveFoodEntitiesToCsv(Collections.emptyList());
     }
 
     @Override

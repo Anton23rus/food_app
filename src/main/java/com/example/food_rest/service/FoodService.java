@@ -1,16 +1,17 @@
 package com.example.food_rest.service;
 
+import com.example.food_rest.dto.FoodDTO;
 import com.example.food_rest.entity.FoodEntity;
 
 import java.util.List;
 
 public interface FoodService {
-    boolean create(FoodEntity foodEntity);
-    boolean update(FoodEntity foodEntity);
-    boolean deleteById(Long id);
-    boolean deleteByName(String name);
-    boolean deleteAll();
+    void create(FoodDTO foodDTO);
+    void update(FoodDTO foodDTO, Long id);
+    void deleteById(Long id);
+    void deleteByName(String name);
+    void deleteAll();
     FoodEntity findById(Long id);
     List<FoodEntity> findByName(String name);
-    List<FoodEntity> findAll();
+    List<FoodEntity> findAll(int offset);
 }

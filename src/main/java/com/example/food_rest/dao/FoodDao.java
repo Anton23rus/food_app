@@ -9,6 +9,7 @@ public interface FoodDao {
     void update(FoodEntity foodEntity);
     void deleteById(Long id);
     void deleteByName(String name);
+    void deleteAll();
     FoodEntity findById(Long id);
     List<FoodEntity> findByName(String name);
     List<FoodEntity> findAll();

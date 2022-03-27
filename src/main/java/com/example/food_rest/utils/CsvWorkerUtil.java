@@ -18,7 +18,6 @@ public class CsvWorkerUtil {
 
     public static List<String> readCSVFile(final String filePath, final boolean skipFirstRow) {
         if (!filePath.endsWith(".csv")) {
-            log.error("Error: Incorrect file format: {}", filePath);
             return Collections.emptyList();
         }
 
@@ -33,15 +32,13 @@ public class CsvWorkerUtil {
         }
     }
 
-    public void writeToCsv(final String filePath, List<String> data, boolean append) {
+    public void writeToCsv(final String filePath, List<String> data, boolean append) throws IOException {
         try (CsvFileWriter bufferedWriter = new CsvFileWriter(new FileWriter(filePath, append))) {
             data.stream()
                     .forEach(row -> {
                         bufferedWriter.write(row);
                         bufferedWriter.newLine();
                     });
-        } catch (IOException e) {
-            log.error(e.toString());
         }
     }
 

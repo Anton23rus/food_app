@@ -1,5 +1,6 @@
 package com.example.food_rest.utils;
 
+import com.example.food_rest.dto.FoodDTO;
 import com.example.food_rest.entity.FoodEntity;
 import lombok.experimental.UtilityClass;
 
@@ -13,5 +14,9 @@ public class FoodConverterUtil {
                 .map(row -> row.split(String.valueOf(delimiter)))
                 .map(arr -> new FoodEntity(Long.valueOf(arr[0]), arr[1]))
                 .collect(Collectors.toList());
+    }
+
+    public FoodEntity convertFoodDtoToFoodEntity(FoodDTO foodDTO) {
+      return FoodEntity.builder().name(foodDTO.getName()).id(0L).build();
     }
 }
